@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة المستخدم</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <p><strong>بريدك:</strong> <span id="userEmail"></span></p>
+      <p><strong>نقاطك:</strong> <span id="userPoints">0</span></p>
+    </div>
+
+    <div class="section">
+      <h3>رابط صفحتك على فيسبوك</h3>
+      <input type="text" id="fbLink" placeholder="أدخل رابط صفحتك">
+      <button onclick="saveFacebookPage()">حفظ</button>
+    </div>
+
+    <div class="section">
+      <h3>صفحات الآخرين</h3>
+      <ul id="pagesList"></ul>
+    </div>
+  </div>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
