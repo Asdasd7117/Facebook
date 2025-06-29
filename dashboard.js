@@ -3,104 +3,82 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 import {
-  getDoc,
-  doc,
-  updateDoc,
-  collection,
-  onSnapshot,
-  increment,
-  arrayUnion
+  getDoc, setDoc, getDocs, updateDoc, doc, collection, arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
-onAuthStateChanged(auth, async user => {
+let currentUser = null;
+let userRef = null;
+let userData = null;
+
+onAuthStateChanged(auth, async (user) => {
   if (!user) return location.href = "index.html";
+  currentUser = user;
+  document.getElementById("userEmail").innerText = user.email;
 
-  const uid = user.uid;
-  document.getElementById("userEmail").textContent = user.email;
-
-  const userRef = doc(db, "users", uid);
+  userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
-  document.getElementById("userPoints").textContent = userSnap.data().points;
+  userData = userSnap.data();
+  document.getElementById("points").innerText = userData.points;
 
-  const list = document.getElementById("pagesList");
+  if (userData.facebookPage) {
+    const myPageInfo = document.createElement("p");
+    myPageInfo.innerText = "ط±ط§ط¨ط· طµظپط­طھظƒ ط§ظ„ط­ط§ظ„ظٹ: " + userData.facebookPage;
+    document.getElementById("myPage").appendChild(myPageInfo);
+  }
 
-  // عرض الصفحات
-  onSnapshot(collection(db, "users"), snapshot => {
-    list.innerHTML = "";
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      if (docSnap.id !== uid && data.facebookPage) {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <a href="${data.facebookPage}" target="_blank">${data.facebookPage}</a>
-          <button onclick="startFollow('${docSnap.id}', this)">متابعة</button>
-        `;
-        list.appendChild(li);
-      }
-    });
-  });
-
-  // حفظ رابط الصفحة
-  window.saveFacebookPage = async () => {
-    const link = document.getElementById("fbLink").value;
-    await updateDoc(doc(db, "users", uid), { facebookPage: link });
-    alert("تم حفظ الرابط.");
+  // ط­ظپط¸ ط±ط§ط¨ط· ط§ظ„طµظپط­ط©
+  document.getElementById("savePageBtn").onclick = async () => {
+    const pageURL = document.getElementById("pageInput").value;
+    if (pageURL.length < 10) return alert("ط§ظ„ط±ط§ط¨ط· ط؛ظٹط± طµط§ظ„ط­");
+    await updateDoc(userRef, { facebookPage: pageURL });
+    alert("طھظ… ط­ظپط¸ ط§ظ„ط±ط§ط¨ط·.");
+    location.reload();
   };
 
-  // متابعة شخص يدويًا
-  window.startFollow = async (targetId, btn) => {
-    btn.disabled = true;
-    btn.textContent = "يرجى متابعة الصفحة ثم اضغط هنا";
+  loadOtherPages();
+});
 
-    const confirmBtn = document.createElement("button");
-    confirmBtn.textContent = "تمت المتابعة";
-    confirmBtn.onclick = async () => {
-      const userRef = doc(db, "users", auth.currentUser.uid);
-      const targetRef = doc(db, "users", targetId);
-
-      const userSnap = await getDoc(userRef);
-      if (userSnap.data().points <= 0) {
-        alert("ليس لديك نقاط!");
-        return;
-      }
-
-      await updateDoc(userRef, {
-        points: increment(-1)
-      });
-
-      await updateDoc(targetRef, {
-        points: increment(1),
-        followers: arrayUnion(auth.currentUser.uid)
-      });
-
-      alert("تمت المتابعة +1 نقطة!");
-      confirmBtn.disabled = true;
-    };
-
-    btn.after(confirmBtn);
-  };
-
-  // تحقق من من تابع صفحتك وأضف له نقطة
-  onSnapshot(doc(db, "users", uid), async docSnap => {
-    const data = docSnap.data();
-    const currentFollowers = data.followers || [];
-
-    for (const followerId of currentFollowers) {
-      const followerRef = doc(db, "users", followerId);
-      const followerSnap = await getDoc(followerRef);
-      if (!followerSnap.exists()) continue;
-
-      const followerData = followerSnap.data();
-      if (!(followerData.followers || []).includes(uid)) {
-        await updateDoc(followerRef, {
-          followers: arrayUnion(uid),
-          points: increment(-1)
-        });
-
-        await updateDoc(doc(db, "users", uid), {
-          points: increment(1)
-        });
-      }
+async function loadOtherPages() {
+  const pagesList = document.getElementById("pagesList");
+  pagesList.innerHTML = "";
+  const usersSnap = await getDocs(collection(db, "users"));
+  usersSnap.forEach(docSnap => {
+    const other = docSnap.data();
+    const otherId = docSnap.id;
+    if (
+      otherId !== currentUser.uid &&
+      other.facebookPage &&
+      (!userData.followers || !userData.followers.includes(otherId))
+    ) {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <a href="${other.facebookPage}" target="_blank">${other.email}</a>
+        <button onclick="confirmFollow('${otherId}')">طھظ…طھ ط§ظ„ظ…طھط§ط¨ط¹ط©</button>
+      `;
+      pagesList.appendChild(li);
     }
   });
-});
+}
+
+window.confirmFollow = async (targetId) => {
+  if (!confirm("ظ‡ظ„ طھط£ظƒط¯طھ ط£ظ†ظƒ طھط§ط¨ط¹طھ ط§ظ„طµظپط­ط© ظپط¹ظ„ظٹط§ظ‹طں")) return;
+  const targetRef = doc(db, "users", targetId);
+  const targetSnap = await getDoc(targetRef);
+  const targetData = targetSnap.data();
+
+  if (userData.points < 1) return alert("ظ„ظٹط³ ظ„ط¯ظٹظƒ ظ†ظ‚ط§ط· ظƒط§ظپظٹط© ظ„طھطھط§ط¨ط¹.");
+
+  // ط®طµظ… ظ†ظ‚ط·ط© ظ…ظ†ظƒ
+  await updateDoc(userRef, {
+    points: userData.points - 1,
+    followers: arrayUnion(targetId)
+  });
+
+  // ط¥ط¶ط§ظپط© ظ†ظ‚ط·ط© ظ„ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„ط¢ط®ط±
+  await updateDoc(targetRef, {
+    points: targetData.points + 1
+  });
+
+  alert("طھظ…طھ ط§ظ„ظ…طھط§ط¨ط¹ط© ظˆطھظ…طھ ط¥ط¶ط§ظپط© ظ†ظ‚ط·ط©.");
+  location.reload();
+};
