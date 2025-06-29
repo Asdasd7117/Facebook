@@ -56,17 +56,28 @@ async function loadOtherPages() {
 
     if (canShow) {
       const li = document.createElement("li");
+      const pageId = `fb_${otherId}`;
       li.innerHTML = `
-        <a href="${other.facebookPage}" target="_blank">${other.email}</a>
-        <button onclick="confirmFollow('${otherId}')">طھظ…طھ ط§ظ„ظ…طھط§ط¨ط¹ط©</button>
+        <button onclick="openFacebookPage('${other.facebookPage}', '${pageId}')">ط§ظپطھط­ ط§ظ„طµظپط­ط©</button>
+        <button id="${pageId}" onclick="confirmFollow('${otherId}')" disabled>ط£ظ†ط§ طھط§ط¨ط¹طھ ط§ظ„طµظپط­ط©</button>
       `;
       pagesList.appendChild(li);
     }
   });
 }
 
+window.openFacebookPage = (url, buttonId) => {
+  window.open(url, '_blank');
+  // ظپط¹ظ‘ظ„ ط§ظ„ط²ط± ط¨ط¹ط¯ ظپطھط­ ط§ظ„ط±ط§ط¨ط·
+  const btn = document.getElementById(buttonId);
+  if (btn) {
+    btn.disabled = false;
+    btn.style.background = "#4CAF50";
+  }
+};
+
 window.confirmFollow = async (targetId) => {
-  if (!confirm("ظ‡ظ„ طھط£ظƒط¯طھ ط£ظ†ظƒ طھط§ط¨ط¹طھ ط§ظ„طµظپط­ط© ظپط¹ظ„ظٹط§ظ‹طں")) return;
+  if (!confirm("ظ‡ظ„ طھط£ظƒط¯طھ ط£ظ†ظƒ طھط§ط¨ط¹طھ ط§ظ„طµظپط­ط© ظپط¹ظ„ظٹظ‹ط§طں")) return;
 
   const targetRef = doc(db, "users", targetId);
   const targetSnap = await getDoc(targetRef);
@@ -77,7 +88,6 @@ window.confirmFollow = async (targetId) => {
     return;
   }
 
-  // طھط­ط¯ظٹط« ظ†ظ‚ط§ط· ط§ظ„ط·ط±ظپظٹظ†
   await updateDoc(userRef, {
     points: userData.points + 1,
     followers: arrayUnion(targetId)
