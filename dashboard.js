@@ -3,7 +3,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 import {
-  getDoc, updateDoc, getDocs, doc, collection, arrayUnion
+  getDoc, updateDoc, getDocs, doc, collection, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
 let currentUser = null;
@@ -18,11 +18,19 @@ onAuthStateChanged(auth, async (user) => {
   userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
   userData = userSnap.data();
-  document.getElementById("points").innerText = userData.points;
+  document.getElementById("points").innerText = userData.points || 0;
 
   if (userData.facebookPage) {
     const myPageInfo = document.createElement("p");
-    myPageInfo.innerText = "ط±ط§ط¨ط· طµظپط­طھظƒ ط§ظ„ط­ط§ظ„ظٹ: " + userData.facebookPage;
+    myPageInfo.innerHTML = "ًں“„ <a href='" + userData.facebookPage + "' target='_blank'>" + userData.facebookPage + "</a> ";
+    const delBtn = document.createElement("button");
+    delBtn.innerText = "â‌Œ ط­ط°ظپ طµظپط­طھظٹ";
+    delBtn.onclick = async () => {
+      await updateDoc(userRef, { facebookPage: "" });
+      alert("طھظ… ط­ط°ظپ طµظپط­طھظƒ.");
+      location.reload();
+    };
+    myPageInfo.appendChild(delBtn);
     document.getElementById("myPage").appendChild(myPageInfo);
   }
 
@@ -56,8 +64,9 @@ async function loadOtherPages() {
 
     if (canShow) {
       const li = document.createElement("li");
-      const pageId = `fb_${otherId}`;
+      const pageId = `btn_${otherId}`;
       li.innerHTML = `
+        ًں‘¤ <strong>${other.email || "ظ…ط³طھط®ط¯ظ…"}</strong><br/>
         <button onclick="openFacebookPage('${other.facebookPage}', '${pageId}')">ط§ظپطھط­ ط§ظ„طµظپط­ط©</button>
         <button id="${pageId}" onclick="confirmFollow('${otherId}')" disabled>ط£ظ†ط§ طھط§ط¨ط¹طھ ط§ظ„طµظپط­ط©</button>
       `;
@@ -68,35 +77,35 @@ async function loadOtherPages() {
 
 window.openFacebookPage = (url, buttonId) => {
   window.open(url, '_blank');
-  // ظپط¹ظ‘ظ„ ط§ظ„ط²ط± ط¨ط¹ط¯ ظپطھط­ ط§ظ„ط±ط§ط¨ط·
   const btn = document.getElementById(buttonId);
   if (btn) {
     btn.disabled = false;
-    btn.style.background = "#4CAF50";
+    btn.style.backgroundColor = "#4CAF50";
   }
 };
 
 window.confirmFollow = async (targetId) => {
-  if (!confirm("ظ‡ظ„ طھط£ظƒط¯طھ ط£ظ†ظƒ طھط§ط¨ط¹طھ ط§ظ„طµظپط­ط© ظپط¹ظ„ظٹظ‹ط§طں")) return;
+  if (!confirm("ظ‡ظ„ ظپط¹ظ„ط§ظ‹ طھط§ط¨ط¹طھ ط§ظ„طµظپط­ط©طں")) return;
 
   const targetRef = doc(db, "users", targetId);
   const targetSnap = await getDoc(targetRef);
   const targetData = targetSnap.data();
 
   if ((targetData.points || 0) < 1) {
-    alert("طµط§ط­ط¨ ظ‡ط°ظ‡ ط§ظ„طµظپط­ط© ظ„ط§ ظٹظ…ظ„ظƒ ظ†ظ‚ط§ط· ظƒط§ظپظٹط© ظ„ظ„ط­طµظˆظ„ ط¹ظ„ظ‰ ظ…طھط§ط¨ط¹ظٹظ†.");
+    alert("طµط§ط­ط¨ ط§ظ„طµظپط­ط© ظ„ط§ ظٹظ…ظ„ظƒ ظ†ظ‚ط§ط·ظ‹ط§ ظƒط§ظپظٹط©.");
     return;
   }
 
+  // طھط­ط¯ظٹط« ط§ظ„ط±طµظٹط¯
   await updateDoc(userRef, {
-    points: userData.points + 1,
+    points: (userData.points || 0) + 1,
     followers: arrayUnion(targetId)
   });
 
   await updateDoc(targetRef, {
-    points: targetData.points - 1
+    points: (targetData.points || 0) - 1
   });
 
-  alert("طھظ…طھ ط§ظ„ظ…طھط§ط¨ط¹ط©. ط£ط¶ظٹظپطھ ظ†ظ‚ط·ط© ظ„ط±طµظٹط¯ظƒ.");
+  alert("âœ… طھظ…طھ ط§ظ„ظ…طھط§ط¨ط¹ط©. ط­طµظ„طھ ط¹ظ„ظ‰ ظ†ظ‚ط·ط©.");
   location.reload();
 };
