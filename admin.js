@@ -6,7 +6,7 @@ import {
   getDocs, collection, doc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
-const ADMIN_EMAIL = "ag7002085@gmail.com"; // ← تأكد أنه مطابق تماماً
+const ADMIN_EMAIL = "ag7002011@gmail.com"; // ← تأكد أنه مطابق تماماً
 
 onAuthStateChanged(auth, async (user) => {
   console.log("تم تسجيل الدخول بواسطة:", user?.email);
