@@ -1,0 +1,57 @@
+body {
+  font-family: 'Tahoma', sans-serif;
+  direction: rtl;
+  background: #f0f8ff;
+  color: #333;
+}
+
+.container {
+  width: 90%;
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+  background: white;
+  margin-top: 50px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+input[type="text"], input[type="email"], input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  padding: 10px 15px;
+  margin-top: 10px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0b7dda;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+ul li {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.google-btn {
+  background-color: #db4437;
+}
+
+.google-btn:hover {
+  background-color: #c23321;
+}
