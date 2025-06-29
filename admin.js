@@ -6,7 +6,7 @@ import {
   getDocs, collection, doc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
-const ADMIN_EMAIL = "admin@example.com"; // عدل هذا إلى بريد المشرف الحقيقي
+const ADMIN_EMAIL = "ag7002085@gmail.com"; // عدل هذا إلى بريد المشرف الحقيقي
 
 onAuthStateChanged(auth, async user => {
   if (!user || user.email !== ADMIN_EMAIL) {
