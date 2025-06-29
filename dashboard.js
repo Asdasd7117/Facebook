@@ -3,7 +3,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 import {
-  getDoc, setDoc, getDocs, updateDoc, doc, collection, arrayUnion
+  getDoc, updateDoc, getDocs, doc, collection, arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
 let currentUser = null;
@@ -26,7 +26,6 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("myPage").appendChild(myPageInfo);
   }
 
-  // ط­ظپط¸ ط±ط§ط¨ط· ط§ظ„طµظپط­ط©
   document.getElementById("savePageBtn").onclick = async () => {
     const pageURL = document.getElementById("pageInput").value;
     if (pageURL.length < 10) return alert("ط§ظ„ط±ط§ط¨ط· ط؛ظٹط± طµط§ظ„ط­");
@@ -41,15 +40,21 @@ onAuthStateChanged(auth, async (user) => {
 async function loadOtherPages() {
   const pagesList = document.getElementById("pagesList");
   pagesList.innerHTML = "";
+
   const usersSnap = await getDocs(collection(db, "users"));
   usersSnap.forEach(docSnap => {
     const other = docSnap.data();
     const otherId = docSnap.id;
-    if (
+
+    const alreadyFollowed = (userData.followers || []).includes(otherId);
+    const canShow = (
       otherId !== currentUser.uid &&
       other.facebookPage &&
-      (!userData.followers || !userData.followers.includes(otherId))
-    ) {
+      !alreadyFollowed &&
+      (other.points || 0) > 0
+    );
+
+    if (canShow) {
       const li = document.createElement("li");
       li.innerHTML = `
         <a href="${other.facebookPage}" target="_blank">${other.email}</a>
@@ -62,23 +67,26 @@ async function loadOtherPages() {
 
 window.confirmFollow = async (targetId) => {
   if (!confirm("ظ‡ظ„ طھط£ظƒط¯طھ ط£ظ†ظƒ طھط§ط¨ط¹طھ ط§ظ„طµظپط­ط© ظپط¹ظ„ظٹط§ظ‹طں")) return;
+
   const targetRef = doc(db, "users", targetId);
   const targetSnap = await getDoc(targetRef);
   const targetData = targetSnap.data();
 
-  if (userData.points < 1) return alert("ظ„ظٹط³ ظ„ط¯ظٹظƒ ظ†ظ‚ط§ط· ظƒط§ظپظٹط© ظ„طھطھط§ط¨ط¹.");
+  if ((targetData.points || 0) < 1) {
+    alert("طµط§ط­ط¨ ظ‡ط°ظ‡ ط§ظ„طµظپط­ط© ظ„ط§ ظٹظ…ظ„ظƒ ظ†ظ‚ط§ط· ظƒط§ظپظٹط© ظ„ظ„ط­طµظˆظ„ ط¹ظ„ظ‰ ظ…طھط§ط¨ط¹ظٹظ†.");
+    return;
+  }
 
-  // ط®طµظ… ظ†ظ‚ط·ط© ظ…ظ†ظƒ
+  // طھط­ط¯ظٹط« ظ†ظ‚ط§ط· ط§ظ„ط·ط±ظپظٹظ†
   await updateDoc(userRef, {
-    points: userData.points - 1,
+    points: userData.points + 1,
     followers: arrayUnion(targetId)
   });
 
-  // ط¥ط¶ط§ظپط© ظ†ظ‚ط·ط© ظ„ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„ط¢ط®ط±
   await updateDoc(targetRef, {
-    points: targetData.points + 1
+    points: targetData.points - 1
   });
 
-  alert("طھظ…طھ ط§ظ„ظ…طھط§ط¨ط¹ط© ظˆطھظ…طھ ط¥ط¶ط§ظپط© ظ†ظ‚ط·ط©.");
+  alert("طھظ…طھ ط§ظ„ظ…طھط§ط¨ط¹ط©. ط£ط¶ظٹظپطھ ظ†ظ‚ط·ط© ظ„ط±طµظٹط¯ظƒ.");
   location.reload();
 };
