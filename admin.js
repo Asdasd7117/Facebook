@@ -6,9 +6,10 @@ import {
   getDocs, collection, doc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
-const ADMIN_EMAIL = "ag7002085@gmail.com"; // عدل هذا إلى بريد المشرف الحقيقي
+const ADMIN_EMAIL = "ag7002085@gmail.com"; // ← تأكد أنه مطابق تماماً
 
-onAuthStateChanged(auth, async user => {
+onAuthStateChanged(auth, async (user) => {
+  console.log("تم تسجيل الدخول بواسطة:", user?.email);
   if (!user || user.email !== ADMIN_EMAIL) {
     document.body.innerHTML = "<h2 style='color:red'>غير مصرح لك بالدخول.</h2>";
     return;
@@ -20,7 +21,7 @@ onAuthStateChanged(auth, async user => {
     const data = docSnap.data();
     const li = document.createElement("li");
     li.innerHTML = `
-      <p><strong>${data.email}</strong> - ${data.points} نقاط</p>
+      <p><strong>${data.email}</strong> - ${data.points || 0} نقاط</p>
       <button onclick="addPoints('${docSnap.id}')">+10 نقاط</button>
       <button onclick="removeUser('${docSnap.id}')">🗑 حذف المستخدم</button>
       <button onclick="removePage('${docSnap.id}')">❌ إزالة الصفحة</button>
